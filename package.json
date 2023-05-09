@@ -12,7 +12,7 @@
     "hackmd"
   ],
   "devDependencies": {
-    "@hackmd/api": "^1.2.0",
+    "@hackmd/api": "^2.4.0",
     "@types/node": "^14.18.0",
     "chalk": "^4.1.0",
     "copy-webpack-plugin": "^6.1.0",

@@ -5,22 +5,24 @@ export default class Settings {
     public static readonly usernameField = "username";
     public static readonly passwordField = "password";
     private static readonly sectionName = "HackMD";
+    public static readonly tokenField = "token";
+    public static readonly urlField = "url";
 
     private static settingsItems: Record<string, SettingItem> = {
-        [Settings.usernameField]: {
+        [Settings.tokenField]: {
             type: SettingItemType.String,
-            label: "HackMD email",
-            value: "",
-            public: true,
-            section: Settings.sectionName
-        },
-        [Settings.passwordField]: {
-            type: SettingItemType.String,
-            label: "HackMD password",
+            label: "HackMD token",
             value: "",
             public: true,
             secure: true,
             storage: SettingStorage.Database,
+            section: Settings.sectionName
+        },
+        [Settings.urlField]: {
+            type: SettingItemType.String,
+            label: "HackMD url",
+            value: "https://api.hackmd.io/v1",
+            public: true,
             section: Settings.sectionName
         }
     };
@@ -29,7 +31,7 @@ export default class Settings {
         await Settings.registerSection();
         Settings.registerSettings();
     }
-    
+
     private static async registerSection() {
         await joplin.settings.registerSection("HackMD", {
             label: "HackMD sync",
@@ -43,10 +45,10 @@ export default class Settings {
         console.debug("Settings registered");
     }
 
-    public static async getUsername () {
-        return await joplin.settings.value(Settings.usernameField);
+    public static async getToken() {
+        return joplin.settings.value(Settings.tokenField);
     }
-    public static async getPassword() {
-        return await joplin.settings.value(Settings.passwordField);
+    public static async getUrl() {
+        return joplin.settings.value(Settings.urlField);
     }
 }
