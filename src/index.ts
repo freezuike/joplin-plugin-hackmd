@@ -64,7 +64,7 @@ async function hackmdDialogs() {
     const randomInt = Math.floor(Math.random() * (10000 - 1 + 1)) + 1;
     let handle = await hackmdDialogs.create('hackmdDialog' + randomInt);
     console.log("handle", handle);
-    await hackmdDialogs.setHtml(handle, '<div><p>Note already shared on HackMD, check footer part of your note for HackMD link,<br>or remove that part to share on HackMD again.<br>Note updating is expected in the next version of the plugin </p></div>');
+    await hackmdDialogs.setHtml(handle, '<div><p>Note already shared on HackMD, check footer part of your note for HackMD link,<br>or remove that part to share on HackMD again. </p></div>');
     await hackmdDialogs.setButtons(handle, [
         {
             id: 'create',
@@ -93,13 +93,13 @@ async function hackmdNote(hmdApiClient, note, id) {
             case 'update':
                 // 执行更新操作
                 if (note.body.includes(hmdIdMarkPrefix)) {
-                    updateHackmdNote(hmdApiClient, note);
+                    await updateHackmdNote(hmdApiClient, note);
                 }
                 break;
             case 'delete':
                 // 执行删除操作
                 if (note.body.includes(hmdIdMarkPrefix)) {
-                    deleteHackmdNote(hmdApiClient, note);
+                    await deleteHackmdNote(hmdApiClient, note);
                 }
                 break;
             case 'cancel':
@@ -107,7 +107,7 @@ async function hackmdNote(hmdApiClient, note, id) {
                 break;
             default:
                 if (!note.body.includes(hmdIdMarkPrefix)) {
-                    createHackmdNote(hmdApiClient, note);
+                    await createHackmdNote(hmdApiClient, note);
                 }
                 break;
         }
