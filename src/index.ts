@@ -24,7 +24,7 @@ joplin.plugins.register({
                     console.warn("Note isn't selected");
                     return;
                 }
-                console.log(note)
+
                 // 判断token，url是否为空
                 let token: string = await Settings.getToken();
                 let url: string = await Settings.getUrl();
@@ -38,29 +38,16 @@ joplin.plugins.register({
                 if (!hmdApiClient) {
                     hmdApiClient = new HmdAPI(token, url);
                 }
-                let result_id = "create";
-                if (note.body.includes(hmdIdMarkPrefix)) {
-                    const hackmdDialogs = joplin.views.dialogs
-                    const handle = await hackmdDialogs.create('hackmdDialog');
-                    await hackmdDialogs.setHtml(handle, '<div><p>Note already shared on HackMD, check footer part of your note for HackMD link,<br>or remove that part to share on HackMD again.<br>Note updating is expected in the next version of the plugin </p></div>');
-                    await hackmdDialogs.setButtons(handle, [
-                        {
-                            id: 'update',
-                            title: 'update'
-                        },
-                        {
-                            id: 'delete',
-                            title: 'delete'
-                        },
-                        {
-                            id: 'cancel'
-                        },
-                    ]);
-                    result_id = (await hackmdDialogs.open(handle)).id;
-                    console.debug("after", result_id);
-                }
-                // 笔记
-                await hackmdNote(hmdApiClient, note, result_id);
+
+                //笔记操作
+                hackmdDialogs().then(async id => {
+                    // 笔记
+                    await hackmdNote(hmdApiClient, note, id);
+                    console.debug(id);
+                }).catch(error => {
+                    // 处理发生错误的情况（即Promise对象的rejected状态）
+                    console.error("error", error);
+                });
             },
         });
 
@@ -69,29 +56,63 @@ joplin.plugins.register({
 
 });
 
+//创建说明和按钮
+async function hackmdDialogs() {
+    const hackmdDialogs = joplin.views.dialogs
+
+    // 暂时想不到如何重新显示Dialog的方法，使用随机数代替，可能点击后会造成无法出现对话框
+    const randomInt = Math.floor(Math.random() * (10000 - 1 + 1)) + 1;
+    let handle = await hackmdDialogs.create('hackmdDialog' + randomInt);
+    console.log("handle", handle);
+    await hackmdDialogs.setHtml(handle, '<div><p>Note already shared on HackMD, check footer part of your note for HackMD link,<br>or remove that part to share on HackMD again.<br>Note updating is expected in the next version of the plugin </p></div>');
+    await hackmdDialogs.setButtons(handle, [
+        {
+            id: 'create',
+            title: 'create'
+        },
+        {
+            id: 'update',
+            title: 'update'
+        },
+        {
+            id: 'delete',
+            title: 'delete'
+        },
+        {
+            id: 'cancel'
+        },
+    ]);
+    let id = (await hackmdDialogs.open(handle)).id
+    return id;
+}
+
 // 异常
 async function hackmdNote(hmdApiClient, note, id) {
     try {
-        //分享笔记
         switch (id) {
             case 'update':
                 // 执行更新操作
-                await updateHackmdNote(hmdApiClient, note);
+                if (note.body.includes(hmdIdMarkPrefix)) {
+                    updateHackmdNote(hmdApiClient, note);
+                }
                 break;
             case 'delete':
                 // 执行删除操作
-                await deleteHackmdNote(hmdApiClient, note);
+                if (note.body.includes(hmdIdMarkPrefix)) {
+                    deleteHackmdNote(hmdApiClient, note);
+                }
                 break;
             case 'cancel':
                 // 取消操作
                 break;
             default:
-                await createHackmdNote(hmdApiClient, note);
+                if (!note.body.includes(hmdIdMarkPrefix)) {
+                    createHackmdNote(hmdApiClient, note);
+                }
                 break;
         }
     } catch (error) {
-        joplin.views.dialogs.showMessageBox(error);
-        return;
+        console.error("error", error);
     }
 }
 
@@ -130,6 +151,7 @@ async function createHackmdNote(hmdApiClient: any, note: any) {
 }
 
 // 更新笔记
+//存在一点问题，如果在同时修改了tag和文本的情况下，会导致，只修改了tag，文本为未修改前，需要再次更新
 async function updateHackmdNote(hmdApiClient: any, note: any) {
     console.debug("[HackMD] Update note...");
 
@@ -153,8 +175,6 @@ async function updateHackmdNote(hmdApiClient: any, note: any) {
 
     const newText = removeLastTwoLines(remoteBody);
     hmdApiClient.updateNoteContent(hmdIdMark, newText);
-    //存在一点问题，如果在同时修改了tag和文本的情况下，会导致，只修改了tag，文本为未修改前，需要再次更新
-    console.log(hmdIdMark, newText);
 }
 
 // 删除笔记

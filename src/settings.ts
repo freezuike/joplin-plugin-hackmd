@@ -2,8 +2,6 @@ import joplin from 'api';
 import { SettingStorage, SettingItem, SettingItemType } from 'api/types';
 
 export default class Settings {
-    public static readonly usernameField = "username";
-    public static readonly passwordField = "password";
     private static readonly sectionName = "HackMD";
     public static readonly tokenField = "token";
     public static readonly urlField = "url";
