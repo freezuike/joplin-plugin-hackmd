@@ -1,3 +1,5 @@
+> 似乎已经不再更新了，展示替代  
+>原仓库：[xardbaiz/hackmd](https://github.com/xardbaiz/joplin-plugin-hackmd/)
 # Joplin -> HackMD
 HackMD Joplin Plugin is an *unofficial* plugin to extend the export tools of [Joplin's](https://joplinapp.org/) desktop application.
 
@@ -36,12 +38,13 @@ It allows sharing notes online on the HackMD website
 
 ## Usage
 ### Register on [HackMD.io](https://hackmd.io)
-Register with email and password _(it's free ;) )_
+
+![](docs/Snipaste_2023-05-11_08-43-48.png)
 
 ### Fill HackMD plugin settings
 Open `Tools > Options > HackMD sync` and fill username & password fields
 
-![HackMD sync settings|571x227, 75%](docs/HackMD_sync_settings.png)
+![HackMD sync settings|571x227, 75%](docs/Snipaste_2023-05-11_08-35-56.png)
 
 
 ### Share
@@ -51,7 +54,11 @@ Select target note and press the `Share on HackMD` button
 
 Wait. If everything is ok - note body will contain link to note on HackMD
 
-![Result with HackMD link|566x65, 75%](docs/Result_with_HackMD_link.png)
+![Result with HackMD link|566x65, 75%](docs/Snipaste_2023-05-11_08-37-35.png)
+
+![](docs/Snipaste_2023-05-11_08-41-54.png)
+
+![](docs/Snipaste_2023-05-11_08-39-18.png)
 
 ## Support
 **Best support is contribution** \
