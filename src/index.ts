@@ -35,9 +35,8 @@ joplin.plugins.register({
                 }
                 // 创建 HmdAPI 实例
                 console.debug("[HackMD] Creating new web-client");
-                if (!hmdApiClient) {
-                    hmdApiClient = new HmdAPI(token, url);
-                }
+
+                hmdApiClient = new HmdAPI(token, url);
 
                 //笔记操作
                 hackmdDialogs().then(async id => {
@@ -112,7 +111,8 @@ async function hackmdNote(hmdApiClient, note, id) {
                 break;
         }
     } catch (error) {
-        console.error("error", error);
+        joplin.views.dialogs.showMessageBox(error);
+        return;
     }
 }
 
@@ -141,7 +141,6 @@ async function createHackmdNote(hmdApiClient: any, note: any) {
         text: note.body
     });
 
-    // let note_publishLink = await hmdApiClient.createNote(note);
     console.log("[HackMD] New note url:", publishLink);
     // Updating Joplin local note body
     let newBody = `${note.body} \n\n ----- \n ${hmdIdMarkPrefix}: ${id}`;
@@ -174,7 +173,7 @@ async function updateHackmdNote(hmdApiClient: any, note: any) {
     }
 
     const newText = removeLastTwoLines(remoteBody);
-    hmdApiClient.updateNoteContent(hmdIdMark, newText);
+    await hmdApiClient.updateNoteContent(hmdIdMark, newText);
 }
 
 // 删除笔记
@@ -183,7 +182,7 @@ async function deleteHackmdNote(hmdApiClient: any, note: any) {
 
     //hackmd笔记id
     const hmdIdMark = getHackmdNoteInfo(note.body, hmdIdMarkPrefix);
-    hmdApiClient.deleteNote(hmdIdMark);
+    await hmdApiClient.deleteNote(hmdIdMark);
     let newBody = removeLastTwoLines(note.body);
     await joplin.data.put(['notes', note.id], null, { body: newBody, source_url: '' });
     await joplin.commands.execute('editor.setText', newBody);
