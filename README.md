@@ -1,4 +1,4 @@
-> 似乎已经不再更新了，展示替代  
+> 似乎已经不再更新了，暂时替代  
 >原仓库：[xardbaiz/hackmd](https://github.com/xardbaiz/joplin-plugin-hackmd/)
 # Joplin -> HackMD
 HackMD Joplin Plugin is an *unofficial* plugin to extend the export tools of [Joplin's](https://joplinapp.org/) desktop application.
