@@ -52,13 +52,15 @@ Select target note and press the `Share on HackMD` button
 
 ![Share button|671x65, 75%](docs/Share_button.png)
 
+![](docs/Snipaste_2023-05-13_19-56-11.png)
+
 Wait. If everything is ok - note body will contain link to note on HackMD
 
-![Result with HackMD link|566x65, 75%](docs/Snipaste_2023-05-11_08-37-35.png)
+![Result with HackMD link|566x65, 75%](docs/Snipaste_2023-05-13_19-57-37.png)
 
 ![](docs/Snipaste_2023-05-11_08-41-54.png)
 
-![](docs/Snipaste_2023-05-11_08-39-18.png)
+![](docs/Snipaste_2023-05-13_19-59-38.png)
 
 ## Support
 **Best support is contribution** \

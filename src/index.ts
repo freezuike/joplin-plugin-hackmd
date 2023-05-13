@@ -69,7 +69,7 @@ async function hackmdUserDialogs(teams: { [x: string]: any; }) {
     const randomInt = Math.floor(Math.random() * (10000 - 1 + 1)) + 1;
     let handle = await hackmdDialogs.create('hackmdUserDialog' + randomInt);
     console.log("handle", handle);
-    await hackmdDialogs.setHtml(handle, '<div><p>Choose individuals and groups<br>There are two tags in the group footer </p></div>');
+    await hackmdDialogs.setHtml(handle, '<div><p>Choose user and teams</div>');
 
     let buttons = [{ id: 'user', title: 'user' }];
     for (let key in teams) {
@@ -100,7 +100,7 @@ async function hackmdDialogs(name) {
     const randomInt = Math.floor(Math.random() * (10000 - 1 + 1)) + 1;
     let handle = await hackmdDialogs.create(name + randomInt);
     console.log("handle", handle);
-    await hackmdDialogs.setHtml(handle, '<div><p>Note already shared on HackMD, check footer part of your note for HackMD link,<br>or remove that part to share on HackMD again. </p></div>');
+    await hackmdDialogs.setHtml(handle, '<div><p>Click on the top right-hand corner Joplin ⚠ (round), check the URL<br>or remove that part to share on HackMD again. </p></div>');
     await hackmdDialogs.setButtons(handle, [
         {
             id: 'create',
@@ -154,7 +154,7 @@ async function hackmdTeamNote(hmdApiClient: any, note: { source_url: string; bod
             // 如果 note.source_url 不为空且不只包含空格，执行相应的操作
             let teamPathValue = getParamValue(source_url, "teamPath");
             if (teamPathValue !== teamPath.id) {
-                throw new Error("这是: [" + getParamValue(source_url, "teamName") + "] 的笔记");
+                throw new Error("This is [" + getParamValue(source_url, "teamName") + "] notes:");
             }
 
             switch (teamPathValue) {
@@ -227,7 +227,6 @@ async function createHackmdTeamNote(hmdApiClient: any, teamPath: any, note: any)
     const { id, publishLink } = await hmdApiClient.createTeamNote(teamPath.id, {
         title: note.title,
         content: remoteBody,
-        text: note.body
     });
 
     console.log("[HackMD] New note url:", `${publishLink}?noteId=${id}&teamPath=${teamPath.id}&teamName=${teamPath.title}`);
@@ -293,7 +292,6 @@ async function createHackmdNote(hmdApiClient: any, teamPath: any, note: any) {
     const { id, publishLink } = await hmdApiClient.createNote({
         title: note.title,
         content: remoteBody,
-        text: note.body
     });
 
     console.log("[HackMD] New note url:", `${publishLink}?noteId=${id}&teamPath=${teamPath.id}&teamName=${teamPath.title}`);
@@ -340,4 +338,31 @@ function getParamValue(url, param) {
     // 获取source_url中的所有参数
     const urlSearchParams = new URLSearchParams(new URL(url).search);
     return urlSearchParams.get(param);
+}
+
+// 获取MarkDown中的图片地址
+function getMarkdownImageUrls(markdown) {
+    const regexp = /!\[(.*?)\]\((.*?)\)/g;
+    const urls = [];
+    let match;
+    while ((match = regexp.exec(markdown)) !== null) {
+        urls.push(match[2]);
+    }
+    return urls;
+}
+
+// 转换图片路径
+async function convertImageUrls(remoteBody) {
+    // 获取 Markdown 文本中的所有图片资源 ID
+    const resourceIds = getMarkdownImageUrls(remoteBody).filter(url => url.startsWith(":/")).map(url => url.replace(/:\//, ''));
+
+    // 遍历所有图片资源 ID
+    for (let resourceId of resourceIds) {
+        // 图片资源在笔记中的路径
+        // await joplin.data.resourcePath(resourceId);
+        // hackmd暂时未提供这个
+        // remoteBody = remoteBody.replace(`![](:/${resourceId})`, `![](${替换后的地址})`);
+    }
+    // 返回替换后的 Markdown 文本
+    return remoteBody;
 }
