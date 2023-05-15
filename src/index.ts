@@ -1,21 +1,88 @@
 import joplin from 'api';
-import { ToolbarButtonLocation } from 'api/types';
-import Settings from "./settings";
+import { ToolbarButtonLocation, SettingStorage, SettingItemType } from 'api/types';
 
 import HmdAPI from '@hackmd/api'
 
 const shareButton = "share"
 let hmdApiClient: HmdAPI;
+const translations = require("./res/lang/translation.json");
+
+let currentGlobal;
 
 joplin.plugins.register({
 
     onStart: async function () {
 
-        Settings.init();
+        //获取joplin的语言
+        async function getLocale() {
+            return await joplin.settings.globalValue("locale");
+        }
+        currentGlobal = await getLocale();
+        console.debug("joplin 现在的语言  ", currentGlobal)
+
+        //如果joplin设置了新的语言，防止出错设置一个默认语言
+        if (!currentGlobal) {
+            currentGlobal = "zh_CN";
+        }
+
+        // 设置语言文本
+        function translate(key) {
+            return translations[currentGlobal][key] ?? key;
+        }
+
+        // 更改语言
+        function changeLocale(locale) {
+            currentGlobal = locale;
+        }
+
+        async function pollLocale() {
+            const handlerOptions = { passive: true };
+            console.debug("开始监测joplin语言变化");
+            const interval = async () => {
+                const newLocale = await getLocale();
+                if (newLocale !== currentGlobal) {
+                    currentGlobal = newLocale;
+                    changeLocale(currentGlobal);
+                    window.location.reload();
+                }
+                setTimeout(interval, 1000);
+            };
+            interval();
+            window.addEventListener('scroll', interval, handlerOptions);
+            console.debug("结束监测joplin语言变化");
+        }
+        // 在插件初始化时开始监听语言变化
+        pollLocale();
+
+        await joplin.settings.registerSection("HackMD", {
+            label: translate("hackmdSync"),
+            name: "HackMD"
+        });
+
+        await joplin.settings.registerSettings({
+            "token": {
+                type: SettingItemType.String,
+                label: translate('token'),
+                value: "",
+                public: true,
+                secure: true,
+                storage: SettingStorage.Database,
+                section: "HackMD",
+                description: translate('token_description'),
+            },
+            'url': {
+                type: SettingItemType.String,
+                label: translate('url'),
+                value: "https://api.hackmd.io/v1",
+                public: true,
+                section: "HackMD",
+                description: translate('url_description')
+            },
+        })
 
         joplin.commands.register({
             name: shareButton,
-            label: 'Share on HackMD',
+            label: translate('shareButton'),
             iconName: 'fa fa-share-alt',
             execute: async () => {
                 const note = await joplin.workspace.selectedNote();
@@ -25,11 +92,11 @@ joplin.plugins.register({
                 }
 
                 // 判断token，url是否为空
-                let token: string = await Settings.getToken();
-                let url: string = await Settings.getUrl();
+                let token: string = await joplin.settings.value("token");
+                let url: string = await joplin.settings.value("url");
 
                 if (!token || !url) {
-                    joplin.views.dialogs.showMessageBox("HackMD token or url is empty! Check HackMD settings")
+                    joplin.views.dialogs.showMessageBox(translate('tokenOrUrlIsEmpty'));
                     return;
                 }
                 // 创建 HmdAPI 实例
@@ -45,7 +112,7 @@ joplin.plugins.register({
                             console.debug("取消选择分享")
                             break;
                         default:
-                            console.log("选择的用户id: " + choose.id)
+                            console.debug("选择的用户id: " + choose.id)
                             hackmdDialogs(choose.id).then(async id => {
                                 //笔记操作
                                 await hackmdTeamNote(hmdApiClient, note, id, choose);
@@ -60,7 +127,10 @@ joplin.plugins.register({
     },
 
 });
-
+// 翻译语言
+function translate(key) {
+    return translations[currentGlobal][key] ?? key;
+}
 // 分组选择框(个人或者团体)
 async function hackmdUserDialogs(teams: { [x: string]: any; }) {
     const hackmdDialogs = joplin.views.dialogs;
@@ -68,8 +138,8 @@ async function hackmdUserDialogs(teams: { [x: string]: any; }) {
     // 暂时想不到如何重新显示Dialog的方法，使用随机数代替，可能点击后会造成无法出现对话框
     const randomInt = Math.floor(Math.random() * (10000 - 1 + 1)) + 1;
     let handle = await hackmdDialogs.create('hackmdUserDialog' + randomInt);
-    console.log("handle", handle);
-    await hackmdDialogs.setHtml(handle, '<div><p>Choose user and teams</div>');
+    console.debug("handle", handle);
+    await hackmdDialogs.setHtml(handle, translate('chooseUserOrTeams'));
 
     let buttons = [{ id: 'user', title: 'user' }];
     for (let key in teams) {
@@ -83,12 +153,12 @@ async function hackmdUserDialogs(teams: { [x: string]: any; }) {
     await hackmdDialogs.setButtons(handle, buttons);
 
     await hackmdDialogs.setButtons(handle, buttons);
-    console.log(buttons);
+    console.debug(buttons);
     const id = (await hackmdDialogs.open(handle)).id;
     let result = { id: '', title: '' };
     result.id = id;
     result.title = buttons.find(btn => btn.id === id).title;
-    console.log(result)
+    console.debug(result)
     return result;
 }
 
@@ -99,20 +169,20 @@ async function hackmdDialogs(name) {
     // 暂时想不到如何重新显示Dialog的方法，使用随机数代替，可能点击后会造成无法出现对话框
     const randomInt = Math.floor(Math.random() * (10000 - 1 + 1)) + 1;
     let handle = await hackmdDialogs.create(name + randomInt);
-    console.log("handle", handle);
-    await hackmdDialogs.setHtml(handle, '<div><p>Click on the top right-hand corner Joplin ⚠ (round), check the URL<br>or remove that part to share on HackMD again. </p></div>');
+    console.debug("handle", handle);
+    await hackmdDialogs.setHtml(handle, translate('hackmdDialogsHtml'));
     await hackmdDialogs.setButtons(handle, [
         {
             id: 'create',
-            title: 'create'
+            title: translate('create')
         },
         {
             id: 'update',
-            title: 'update'
+            title: translate('update')
         },
         {
             id: 'delete',
-            title: 'delete'
+            title: translate('delete')
         },
         {
             id: 'cancel'
@@ -154,7 +224,7 @@ async function hackmdTeamNote(hmdApiClient: any, note: { source_url: string; bod
             // 如果 note.source_url 不为空且不只包含空格，执行相应的操作
             let teamPathValue = getParamValue(source_url, "teamPath");
             if (teamPathValue !== teamPath.id) {
-                throw new Error("This is [" + getParamValue(source_url, "teamName") + "] notes:");
+                throw new Error(translate('notesBelonging') + getParamValue(source_url, "teamName") + translate('notes'));
             }
 
             switch (teamPathValue) {
@@ -229,7 +299,7 @@ async function createHackmdTeamNote(hmdApiClient: any, teamPath: any, note: any)
         content: remoteBody,
     });
 
-    console.log("[HackMD] New note url:", `${publishLink}?noteId=${id}&teamPath=${teamPath.id}&teamName=${teamPath.title}`);
+    console.debug("[HackMD] New note url:", `${publishLink}?noteId=${id}&teamPath=${teamPath.id}&teamName=${teamPath.title}`);
     await joplin.data.put(['notes', note.id], null, { source_url: `${publishLink}?noteId=${id}&teamPath=${teamPath.id}&teamName=${teamPath.title}` });
 }
 
@@ -294,7 +364,7 @@ async function createHackmdNote(hmdApiClient: any, teamPath: any, note: any) {
         content: remoteBody,
     });
 
-    console.log("[HackMD] New note url:", `${publishLink}?noteId=${id}&teamPath=${teamPath.id}&teamName=${teamPath.title}`);
+    console.debug("[HackMD] New note url:", `${publishLink}?noteId=${id}&teamPath=${teamPath.id}&teamName=${teamPath.title}`);
     await joplin.data.put(['notes', note.id], null, { source_url: `${publishLink}?noteId=${id}&teamPath=${teamPath.id}&teamName=${teamPath.title}` });
 }
 
